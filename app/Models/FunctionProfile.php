@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Profile extends Model
+class FunctionProfile extends Model
 {
     use HasFactory;
 
-    protected $table = 'profiles';
+    protected $table = 'functions_profiles';
 
     protected $filliable = [
-        'name',
-        'description',
+        'function_id',
+        'profile_id',
     ];
 }

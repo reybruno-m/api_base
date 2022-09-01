@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use DateTimeInterface;
 
 class User extends Authenticatable implements JWTSubject
 {
@@ -19,12 +20,15 @@ class User extends Authenticatable implements JWTSubject
      */
     protected $fillable = [
         'username',
+        'password',
         'last_name',
         'first_name',
-        'phone_number',
         'email',
+        'email_verified_at',
+        'uuid',
+        'phone_number',
+        'profile_id',
         'state',
-        'password',
     ];
 
     /**
@@ -70,5 +74,13 @@ class User extends Authenticatable implements JWTSubject
         return [];
     }
 
-    # Eloquent Relationship
+    /**
+     * Prepare a date for array / JSON serialization.
+     *
+     * @param  \DateTimeInterface  $date
+     * @return string
+     */
+    protected function serializeDate(DateTimeInterface $date){
+        return $date->format('Y-m-d H:i:s');
+    }
 }

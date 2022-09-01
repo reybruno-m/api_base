@@ -8,4 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class Functions extends Model
 {
     use HasFactory;
+
+    protected $table = 'functions';
+
+    protected $filliable = [
+        'name',
+        'description',
+        'url',
+    ];
 }

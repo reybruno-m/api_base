@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Hash;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ActivityController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Mail\UserEmailController;
 use App\Models\User;
 use App\Models\UserSession;
 
@@ -14,13 +16,17 @@ use Validator;
 
 class AuthController extends Controller
 {
+    public $activity;
+
     public function __construct(){
-        $this->middleware('auth:api', ['except' => ['login', 'signup']]);
+        $this->middleware('auth:api', ['except' => ['login', 'signup', 'validateAccount', 'forgottenPwd', 'updatePwd']]);
+        $this->activity = new ActivityController();
+        $this->notify = new UserEmailController();
     }
 
+    # Iniciar sesión.
     public function login(){
         $credentials = request(['username', 'password']);
-        $device = request('device');
 
         $credentials['username'] = addslashes(trim(strtolower($credentials['username'])));
         $credentials['password'] = addslashes(trim(strtolower($credentials['password'])));
@@ -47,17 +53,16 @@ class AuthController extends Controller
         }
 
         $user = auth()->user();
-        
+
         if(!$user->state){
             return response()->json(json_encode(['error' => ['El usuario se encuentra bloqueado, por favor contacte un administrador para solicitar su desbloqueo.']]), 400);
         }
-        
+
         $sesion = $this->respondWithToken($token);
-        
+
         unset($user->email_verified_at);
 
-        //$log = new ActivityController();
-        //$activity = $log->store('Acceso al sistema', $device);
+        $this->activity->store("users", "LOGIN", "Acceso al Sistema");
 
         //$this->storeActiveSesion($user, $token);
 
@@ -70,13 +75,16 @@ class AuthController extends Controller
         return $response;
     }
 
+    # Registrarse.
     public function signup(Request $request) {
+
         $validator = Validator::make($request->all(), [
             'last_name' => 'required|string|between:2,100',
             'first_name' => 'required|string|between:2,100',
             'email' => 'required|string|email|max:100|unique:users',
             'username' => 'required|string|between:7,14|unique:users',
             'password' => 'required|string|confirmed|min:8',
+            'profile_id' => 'nullable|exists:profiles,id',
         ],[
             'last_name.required' => "El Apellido no puede estar vacío.",
             'first_name.required' => "El Nombre no puede estar vacío.",
@@ -87,6 +95,7 @@ class AuthController extends Controller
             'password.required' => "La Contraseña no puede estar vacia.",
             'password_confirmation.required' => "La Contraseña debe confirmarse.",
             'password_confirmation.confirmed' => "La Contraseña debe confirmarse.",
+            'profile_id.exists' => "El perfil que intenta asignar no existe.",
         ]);
 
         if($validator->fails()){
@@ -95,35 +104,129 @@ class AuthController extends Controller
 
         $user = User::create(array_merge(
             $validator->validated(),
-            ['password' => Hash::make($request->password)]
+            ['password' => Hash::make($request->password)],
+            ['uuid' => (string) Str::uuid()]
         ));
 
         if($user){
+
+            $this->activity->store("auth", "REGISTER", "Usuario Registrado");
+
+            $resNotify = $this->notify->createAccount($user);
+
             return response()->json([
                 'status' => 'success',
                 'message' => 'Usuario registrado correctamente.',
             ], 200);
         }
-
     }
 
+    # Obtener usuario.
     public function me(){
         return response()->json(auth()->user());
     }
 
+    # Finalizar sesión.
     public function logout(){
+
         auth()->logout();
+
+        $this->activity->store("users", "LOGOUT", "Usuario Deslogueado.");
+
         return response()->json(['message' => 'Sesion Finalizada correctamente.']);
     }
 
+    # Renovar sesión.
     public function refresh(){
         return $this->respondWithToken(auth()->refresh());
     }
 
+    # Calcular tiempo sesión.
     protected function respondWithToken($token){
         return [
             'access_token' => $token,
             'expires_in' => auth()->factory()->getTTL() * 60 * 24
         ];
+    }
+
+    # [Email] Valida una cuenta con un enlace de verificación.
+    public function validateAccount($uuid){
+
+        $record = User::where('uuid', $uuid)->first();
+
+        if(!$record){
+            return response()->json(json_encode(['error' => ['El código de validación no existe.']]), 400);
+        }
+
+        $record->email_verified_at = date("Y-m-d H:i:s");
+        $record->uuid = null;
+        $record->state = 1;
+        $record->save();
+
+        $this->activity->store("users", "EMAIL", "Cuenta Confirmada");
+
+        return response()->json([
+            'success' => true, 
+            'message' => "Cuenta verificada correctamente."
+        ], 200 );
+
+    }
+
+    # [Email] Solicitar restablecimiento de clave.
+    public function forgottenPwd(Request $request){
+        $record = User::where('email', $request->email)->first();
+
+        $msg = "Si el email se encuentra registrado, reenviaremos un link de recuperación de clave.";
+
+        if($record){
+            $record->uuid = (string) Str::uuid();
+            $record->save();
+
+
+            if($record->email_verified_at == '' || is_null($record->email_verified_at)){
+                $resNotify = $this->notify->createAccount($record);
+                $msg = "Para solicitar un link de recuperación de clave, primero debe verificar su cuenta. Reenviaremos el link a su email.";
+            }else{
+                $resNotify = $this->notify->forgottenPassword($record);
+            }
+        }
+
+        return response()->json([
+            'success' => true, 
+            'message' => $msg
+        ], 200 );
+    }
+
+    # Actualiza la clave de usuario a partir de un enlace de restablecimiento.
+    public function updatePwd(Request $request, $uuid){
+        
+        $record = User::where('uuid', $uuid)->first();
+
+        if(!$record){
+            return response()->json(json_encode(['error' => ['El código de verificación no es valido.']]), 400);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|confirmed|min:8',
+        ],[
+            'password.required' => "La Contraseña no puede estar vacia.",
+            'password_confirmation.required' => "La Contraseña debe confirmarse.",
+            'password_confirmation.confirmed' => "La Contraseña debe confirmarse.",
+        ]);
+
+        if($validator->fails()){
+            return response()->json($validator->errors()->toJson(), 400);
+        }
+
+        $record->uuid = null;
+        $record->password = Hash::make($request->password);
+        $record->save();
+
+        $this->activity->store("users", "UPDATE", "Contraseña modificada correctamente.");
+
+        return response()->json([
+            'success' => true, 
+            'message' => "Clave actualizada correctamente."
+        ], 200 );
     }
 }
