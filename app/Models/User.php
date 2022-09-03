@@ -83,4 +83,14 @@ class User extends Authenticatable implements JWTSubject
     protected function serializeDate(DateTimeInterface $date){
         return $date->format('Y-m-d H:i:s');
     }
+
+    # Obtiene las funciones que están asociadas al perfil que tiene el usuario.
+    public function permissions(){
+        return $this->hasMany('App\Models\FunctionProfile', 'profile_id', 'profile_id');
+    }
+
+    # Obtiene el perfil al que está asociado el usuario.
+    public function profile(){
+        return $this->belongsTo('App\Models\Profile', 'profile_id');
+    }
 }

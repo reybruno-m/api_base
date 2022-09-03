@@ -13,6 +13,7 @@ class Activity extends Model
 
     protected $filliable = [
         'user_id',
+        'affected_id',
         'table',
         'address',
         'device',

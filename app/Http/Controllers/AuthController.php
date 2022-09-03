@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\ActivityController;
+use App\Http\Controllers\UserController;
+
 use App\Http\Controllers\Mail\UserEmailController;
 use App\Models\User;
 use App\Models\UserSession;
@@ -17,9 +19,10 @@ use Validator;
 class AuthController extends Controller
 {
     public $activity;
+    public $notify;
 
     public function __construct(){
-        $this->middleware('auth:api', ['except' => ['login', 'signup', 'validateAccount', 'forgottenPwd', 'updatePwd']]);
+        $this->middleware('auth:api', ['except' => ['login', 'signup', 'validateEmail', 'forgottenPwd', 'updatePwd']]);
         $this->activity = new ActivityController();
         $this->notify = new UserEmailController();
     }
@@ -62,68 +65,27 @@ class AuthController extends Controller
 
         unset($user->email_verified_at);
 
-        $this->activity->store("users", "LOGIN", "Acceso al Sistema");
+        $this->activity->store("users", "LOGIN", $user->id, "Acceso al Sistema");
 
         //$this->storeActiveSesion($user, $token);
 
         $response = [
             'status' => 'success',
             "sesion" => $sesion,
-            "user" => $user
+            "user" => $user,
         ];
-
         return $response;
     }
 
     # Registrarse.
     public function signup(Request $request) {
-
-        $validator = Validator::make($request->all(), [
-            'last_name' => 'required|string|between:2,100',
-            'first_name' => 'required|string|between:2,100',
-            'email' => 'required|string|email|max:100|unique:users',
-            'username' => 'required|string|between:7,14|unique:users',
-            'password' => 'required|string|confirmed|min:8',
-            'profile_id' => 'nullable|exists:profiles,id',
-        ],[
-            'last_name.required' => "El Apellido no puede estar vacío.",
-            'first_name.required' => "El Nombre no puede estar vacío.",
-            'username.required' => "El Nombre de Usuario no puede estar vacío.",
-            'username.unique' => "El Nombre de Usuario ingresado se encuentra en uso.",
-            'email.required' => "El Email no puede estar vacío.",
-            'email.unique' => "El Email ingresado se encuentra en uso.",
-            'password.required' => "La Contraseña no puede estar vacia.",
-            'password_confirmation.required' => "La Contraseña debe confirmarse.",
-            'password_confirmation.confirmed' => "La Contraseña debe confirmarse.",
-            'profile_id.exists' => "El perfil que intenta asignar no existe.",
-        ]);
-
-        if($validator->fails()){
-            return response()->json($validator->errors()->toJson(), 400);
-        }
-
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password' => Hash::make($request->password)],
-            ['uuid' => (string) Str::uuid()]
-        ));
-
-        if($user){
-
-            $this->activity->store("auth", "REGISTER", "Usuario Registrado");
-
-            $resNotify = $this->notify->createAccount($user);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Usuario registrado correctamente.',
-            ], 200);
-        }
+        $userClass = new UserController();
+        return $userClass->store($request);
     }
 
     # Obtener usuario.
     public function me(){
-        return response()->json(auth()->user());
+        response()->json(auth()->user());
     }
 
     # Finalizar sesión.
@@ -131,7 +93,7 @@ class AuthController extends Controller
 
         auth()->logout();
 
-        $this->activity->store("users", "LOGOUT", "Usuario Deslogueado.");
+        $this->activity->store("users", "LOGOUT", null, "Usuario Deslogueado.");
 
         return response()->json(['message' => 'Sesion Finalizada correctamente.']);
     }
@@ -150,7 +112,7 @@ class AuthController extends Controller
     }
 
     # [Email] Valida una cuenta con un enlace de verificación.
-    public function validateAccount($uuid){
+    public function validateEmail($uuid){
 
         $record = User::where('uuid', $uuid)->first();
 
@@ -163,7 +125,7 @@ class AuthController extends Controller
         $record->state = 1;
         $record->save();
 
-        $this->activity->store("users", "EMAIL", "Cuenta Confirmada");
+        $this->activity->store("users", "EMAIL", $record->id, "Email Confirmado");
 
         return response()->json([
             'success' => true, 
@@ -222,7 +184,7 @@ class AuthController extends Controller
         $record->password = Hash::make($request->password);
         $record->save();
 
-        $this->activity->store("users", "UPDATE", "Contraseña modificada correctamente.");
+        $this->activity->store("users", "UPDATE", $record->id, "Contraseña modificada correctamente.");
 
         return response()->json([
             'success' => true, 

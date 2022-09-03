@@ -60,7 +60,7 @@ class FunctionController extends Controller
         $record->save();
 
         if($record){
-            $this->activity->store("functions", "STORE", "Función $record->id Creada");
+            $this->activity->store("functions", "STORE", $record->id, "Función $record->id Creada");
 
             return response()->json([
                 'status' => 'success',
@@ -128,7 +128,7 @@ class FunctionController extends Controller
         $record->save();
 
         if($record){
-            $this->activity->store("functions", "UPDATE", "Función $record->id Actualizada");
+            $this->activity->store("functions", "UPDATE", $record->id, "Función $record->id Actualizada");
 
             return response()->json([
                 'status' => 'success',
@@ -153,7 +153,7 @@ class FunctionController extends Controller
             $delete = Functions::where('id', $id)->delete();
     
             if($delete){
-                $this->activity->store("functions", "DELETE", "Función $record->id Eliminada");
+                $this->activity->store("functions", "DELETE", $record->id, "Función $record->id Eliminada");
 
                 return response()->json([
                     'status' => 'success',

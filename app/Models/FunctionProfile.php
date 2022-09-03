@@ -15,4 +15,12 @@ class FunctionProfile extends Model
         'function_id',
         'profile_id',
     ];
+
+    public function profile(){
+        return $this->belongsTo('App\Models\Profile', 'profile_id');
+    }
+
+    public function functions(){
+        return $this->belongsTo('App\Models\Functions', 'function_id');
+    }
 }

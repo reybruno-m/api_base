@@ -10,6 +10,7 @@ use App\Http\Controllers\ActivityController;
 use App\Models\User;
 
 use App\Mail\Users\CreateAccount;
+use App\Mail\Users\EmailUpdate;
 use App\Mail\Users\ForgottenPassword;
 
 use Validator;
@@ -28,7 +29,21 @@ class UserEmailController extends Controller
 
         if($user){
             Mail::to($user->email)->send(new CreateAccount($user));
-            $this->activity->store("users", "EMAIL", "Código de verificación de cuenta enviado");
+            $this->activity->store("users", "EMAIL", $user->id, "Código de verificación de cuenta enviado");
+
+            return response()->json([
+                'success' => true, 
+                'message' => "Se envió un código de verificación a su email."
+            ], 200 );
+        }
+    }
+
+    # Envia al usuario un enlace de verificación de cuenta, se utiliza cuando se modifica la dirección de email.
+    public function emailUpdate($user){
+
+        if($user){
+            Mail::to($user->email)->send(new EmailUpdate($user));
+            $this->activity->store("users", "EMAIL", $user->id, "Email Modificado, Código de verificación de cuenta enviado");
 
             return response()->json([
                 'success' => true, 
@@ -42,7 +57,7 @@ class UserEmailController extends Controller
 
         if($user){
             Mail::to($user->email)->send(new ForgottenPassword($user));
-            $this->activity->store("users", "EMAIL", "Solicitud de restablecimiento de clave generada.");
+            $this->activity->store("users", "EMAIL", $user->id, "Solicitud de restablecimiento de clave generada.");
             
             return response()->json([
                 'success' => true, 

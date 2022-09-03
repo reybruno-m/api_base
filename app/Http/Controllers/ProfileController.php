@@ -53,7 +53,7 @@ class ProfileController extends Controller
         $record->save();
 
         if($record){
-            $this->activity->store("profiles", "STORE", "Perfil $record->id Creado");
+            $this->activity->store("profiles", "STORE", $record->id, "Perfil $record->id Creado");
 
             return response()->json([
                 'status' => 'success',
@@ -116,7 +116,7 @@ class ProfileController extends Controller
         $record->save();
 
         if($record){
-            $this->activity->store("profiles", "UPDATE", "Perfil $record->id Actualizado");
+            $this->activity->store("profiles", "UPDATE", $record->id, "Perfil Actualizado");
 
             return response()->json([
                 'status' => 'success',
@@ -141,7 +141,7 @@ class ProfileController extends Controller
             $delete = Profile::where('id', '=', $id)->delete();
     
             if($delete){
-                $this->activity->store("profiles", "DELETE", "Perfil $record->id Eliminado");
+                $this->activity->store("profiles", "DELETE", $record->id, "Perfil Eliminado");
 
                 return response()->json([
                     'status' => 'success',

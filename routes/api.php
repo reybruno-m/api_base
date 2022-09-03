@@ -11,21 +11,18 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\Mail\UserEmailController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| is assigned the "api" middleware group. Enjoy building your API!
-|
-*/
+#--------------------------------------------------------------------------
+# API TEST Routes
+#--------------------------------------------------------------------------
+
+Route::post('testMail', [UserEmailController::class, 'createAccount'])->name('createAccount');
+
+#--------------------------------------------------------------------------
+# API Prod Routes
+#--------------------------------------------------------------------------
 
 Route::get('/', function () { return "API REST"; });
 Route::get('status', function () { return true; });
-
-Route::post('testMail', [UserEmailController::class, 'createAccount'])->name('createAccount');
 
 # Auth
 Route::group([
@@ -39,17 +36,24 @@ Route::group([
     Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
     Route::post('me', [AuthController::class, 'me'])->name('me');
     # Validación de cuenta.
-    Route::get('validate/{uuid}', [AuthController::class, 'validateAccount'])->name('validateAccount');
+    Route::get('validate/{uuid}', [AuthController::class, 'validateEmail'])->name('validateEmail');
     # Recuperación de clave.
     Route::post('password/forgotten', [AuthController::class, 'forgottenPwd'])->name('forgottenPwd');
     Route::post('password/update/{uuid}', [AuthController::class, 'updatePwd'])->name('updatePwd');
 });
 
 Route::middleware(['api'])->group(function () {
+
+    # CRUDS completos de API
     Route::apiResources([
         'users' => UserController::class,
         'function' => FunctionController::class,
         'profile' => ProfileController::class,
-        'functionProfile' => FunctionProfileController::class,
+    ]);
+
+    # CRUDS parciales
+
+    Route::resource('functionProfile', FunctionProfileController::class)->only([
+        'store', 'destroy'
     ]);
 });

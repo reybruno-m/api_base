@@ -18,12 +18,13 @@ class ActivityController extends Controller
 
     }
 
-    public function store($table, $action = "", $description = "")
+    public function store($table, $action = "", $affected_id = null, $description = "")
     {
         $user = auth()->user();
 
         $record = new Activity();
         $record->user_id = $user ? $user->id : 1;
+        $record->affected_id = $affected_id;
         $record->table = $table;
         $record->address = $_SERVER['REMOTE_ADDR'];
         $record->device = Browser::platformFamily()	." ". Browser::platformVersion();

@@ -15,4 +15,9 @@ class Profile extends Model
         'name',
         'description',
     ];
+
+    # Obtiene las funciones que posee asociada este perfil
+    public function functions(){
+        return $this->hasMany('App\Models\FunctionProfile', 'profile_id');
+    }
 }
