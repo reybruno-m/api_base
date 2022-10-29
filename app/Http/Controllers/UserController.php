@@ -167,7 +167,9 @@ class UserController extends Controller
             return response()->json(json_encode(['error' => ['El email ingresado ya se encuentra registrado.']]), 400);
         }
 
-        # Respalda los datos antes de modificarlos para comparar.
+        $aryMsg = [];
+
+        # Copia los datos antes de modificarlos para comparar.
         $aryOld = $record;
 
         $record->username = $request->username;
@@ -180,6 +182,7 @@ class UserController extends Controller
             $record->email = $request->email;
             $record->email_verified_at = null;
             $record->uuid = (string) Str::uuid();
+            array_push($aryMsg, "Detectamos que se modificó la dirección de email, enviamos un link de validación a $request->email");
         }
 
         $record->phone_number = $request->phone_number;
@@ -199,6 +202,7 @@ class UserController extends Controller
             return response()->json([
                 'status' => 'success',
                 'message' => 'Usuario actualizado correctamente.',
+                'changes' => $aryMsg
             ], 200);
         }
 
