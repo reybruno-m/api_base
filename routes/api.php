@@ -11,11 +11,15 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\Mail\UserEmailController;
 
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\IVAController;
+use App\Http\Controllers\PaidMethodsController;
+
 #--------------------------------------------------------------------------
 # API TEST Routes
 #--------------------------------------------------------------------------
 
-Route::post('testMail', [UserEmailController::class, 'createAccount'])->name('createAccount');
+Route::post('testMail', [UserEmailController::class, 'createAccount']);
 
 #--------------------------------------------------------------------------
 # API Prod Routes
@@ -30,16 +34,16 @@ Route::group([
     'prefix' => 'auth'
 ], function ($router) {
     # Auth
-    Route::post('login', [AuthController::class, 'login'])->name('login');
-    Route::post('signup', [AuthController::class, 'signup'])->name('signup');
-    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-    Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
-    Route::post('me', [AuthController::class, 'me'])->name('me');
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('signup', [AuthController::class, 'signup']);
+    Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('refresh', [AuthController::class, 'refresh']);
+    Route::post('me', [AuthController::class, 'me']);
     # Validación de cuenta.
-    Route::get('validate/{uuid}', [AuthController::class, 'validateEmail'])->name('validateEmail');
+    Route::get('validate/{uuid}', [AuthController::class, 'validateEmail']);
     # Recuperación de clave.
-    Route::post('password/forgotten', [AuthController::class, 'forgottenPwd'])->name('forgottenPwd');
-    Route::post('password/update/{uuid}', [AuthController::class, 'updatePwd'])->name('updatePwd');
+    Route::post('password/forgotten', [AuthController::class, 'forgottenPwd']);
+    Route::post('password/update/{uuid}', [AuthController::class, 'updatePwd']);
 });
 
 Route::middleware(['api'])->group(function () {
@@ -56,4 +60,17 @@ Route::middleware(['api'])->group(function () {
     Route::resource('functionProfile', FunctionProfileController::class)->only([
         'store', 'destroy'
     ]);
+});
+
+# Catalogs
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'catalogs'
+], function ($router) {
+
+    Route::get('locations', [LocationController::class, 'locations']);
+    Route::get('locations/{term}', [LocationController::class, 'locationsAutocomplete']);
+
+    Route::get('iva', [IVAController::class, 'index']);
+    Route::get('paid-methods', [PaidMethodsController::class, 'index']);
 });
