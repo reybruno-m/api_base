@@ -35,6 +35,13 @@ return [
             'root' => storage_path('app'),
         ],
 
+        'comprobantes' => [
+            'driver' => 'local',
+            'root' => storage_path('app/comprobantes-movimientos'),
+            'url' => env('APP_URL').'/comprobantes',
+            'visibility' => 'public',
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
@@ -68,6 +75,7 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+        public_path('comprobantes') => storage_path('app/comprobantes-movimientos'),
     ],
 
 ];

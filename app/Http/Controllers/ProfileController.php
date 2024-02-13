@@ -90,6 +90,7 @@ class ProfileController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = auth()->user();
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,75',

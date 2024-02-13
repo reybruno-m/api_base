@@ -14,6 +14,7 @@ use App\Http\Controllers\Mail\UserEmailController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\IVAController;
 use App\Http\Controllers\PaidMethodsController;
+use App\Http\Controllers\FileController;
 
 #--------------------------------------------------------------------------
 # API TEST Routes
@@ -62,6 +63,19 @@ Route::middleware(['api'])->group(function () {
     ]);
 });
 
+# Files
+Route::group([
+    'middleware' => 'api',
+    'prefix' => 'files'
+], function ($router) {
+
+    Route::get('', [FileController::class, 'index']);
+    Route::get('/{origin_table}/{origin_id}', [FileController::class, 'show']);
+    Route::post('', [FileController::class, 'store']);
+    Route::put('', [FileController::class, 'update']);
+    Route::delete('/{id}', [FileController::class, 'destroy']);
+});
+
 # Catalogs
 Route::group([
     'middleware' => 'api',
@@ -70,7 +84,6 @@ Route::group([
 
     Route::get('locations', [LocationController::class, 'locations']);
     Route::get('locations/{term}', [LocationController::class, 'locationsAutocomplete']);
-
     Route::get('iva', [IVAController::class, 'index']);
     Route::get('paid-methods', [PaidMethodsController::class, 'index']);
 });
