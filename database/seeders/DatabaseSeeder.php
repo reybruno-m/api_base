@@ -23,8 +23,8 @@ class DatabaseSeeder extends Seeder
             #CitiesSeeder::class,
             #ProfileSeeder::class,
             #FunctionSeeder::class,
-            FunctionProfileSeeder::class,
-            UserSeeder::class,
+            #FunctionProfileSeeder::class,
+            #UserSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
     }

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Functions;
 
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class FunctionController extends Controller
 {

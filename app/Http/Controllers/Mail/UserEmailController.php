@@ -13,7 +13,7 @@ use App\Mail\Users\CreateAccount;
 use App\Mail\Users\EmailUpdate;
 use App\Mail\Users\ForgottenPassword;
 
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class UserEmailController extends Controller
 {

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Profile;
 
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class ProfileController extends Controller
 {

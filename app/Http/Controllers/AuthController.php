@@ -12,9 +12,9 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\Mail\UserEmailController;
 use App\Models\User;
-use App\Models\UserSession;
+use App\Models\Profile;
 
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
@@ -67,13 +67,15 @@ class AuthController extends Controller
 
         $this->activity->store("users", "LOGIN", $user->id, "Acceso al Sistema");
 
-        //$this->storeActiveSesion($user, $token);
+        $allowed = Profile::with('functions', 'functions.functions')->find($user->profile_id);
 
         $response = [
             'status' => 'success',
-            "sesion" => $sesion,
+            "session" => $sesion,
             "user" => $user,
+            "allowed" => $allowed
         ];
+
         return $response;
     }
 

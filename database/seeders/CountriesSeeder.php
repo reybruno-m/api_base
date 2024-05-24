@@ -17,16 +17,19 @@ class CountriesSeeder extends Seeder
     {
 
         $countries = Storage::get('seeders/countries.csv');
-
         $aryCountries = explode("\n", $countries);
 
         if(is_array($aryCountries)){
             foreach ($aryCountries as $country) {
-                list($iso, $name) = explode(",", $country);
+                list($nombre, $name, $nom, $iso2, $iso3, $phone_code) = explode(",", $country);
 
                 DB::table('countries')->insert([
+                    "nombre" => $nombre,
                     "name" => $name,
-                    "iso" => $iso,
+                    "nom" => $nom,
+                    "iso2" => $iso2,
+                    "iso3" => $iso3,
+                    "phone_code" => $phone_code,
                     "created_at" => date("Y-m-d H:i:s"),
                 ]);
             }

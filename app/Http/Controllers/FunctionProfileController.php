@@ -7,7 +7,7 @@ use App\Models\FunctionProfile;
 //use App\Models\Profile;
 //use App\Models\Functions;
 
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class FunctionProfileController extends Controller
 {

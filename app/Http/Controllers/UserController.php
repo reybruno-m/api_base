@@ -11,7 +11,7 @@ use App\Http\Controllers\Mail\UserEmailController;
 
 use App\Models\User;
 
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
